@@ -7,7 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Roboto&display=swap');
 
-    /* Background & Magical Texture */
+    /* Background & Texture */
     body {
       margin: 0;
       padding: 0;
@@ -17,21 +17,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: url('https://images.unsplash.com/photo-1613040529863-4d659f5635a6?auto=format&fit=crop&w=1400&q=80') no-repeat center center fixed;
-      background-size: cover;
       position: relative;
+      background: url('https://www.transparenttextures.com/patterns/leather.png') repeat, #4b2e1d;
     }
 
     body::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(2px);
       z-index: 0;
     }
 
-    /* Card Container */
     .container {
       position: relative;
       z-index: 1;
@@ -155,20 +153,19 @@
       }
 
       status.textContent = "Processing...";
-      
+
       for (let file of filesToUpload) {
         const formData = new FormData();
         formData.append('image', file);
 
         try {
-          const res = await fetch('https://muinf.app.n8n.cloud/webhook/https://muinf.app.n8n.cloud/webhook/card-upload
-', {
+          const res = await fetch('https://muinf.app.n8n.cloud/webhook/card-upload', {
             method: 'POST',
             body: formData
           });
 
           const data = await res.json();
-          status.textContent = `Last Processed: ${data.cardName} - $${data.price}`;
+          status.textContent = `Last Processed: ${data.cardName || 'N/A'} - $${data.price || 'N/A'}`;
         } catch (err) {
           status.textContent = 'Error processing images.';
           console.error(err);
