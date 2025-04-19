@@ -2,179 +2,135 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MTGVision</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MTGVision Terminal</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Roboto&display=swap');
-
-    /* Background & Texture */
     body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Cinzel', serif;
-      color: #f9f6f2;
-      min-height: 100vh;
+      background-color: #1e1e1e;
+      color: #00ff88;
+      font-family: monospace;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      position: relative;
-      background: url('https://www.transparenttextures.com/patterns/leather.png') repeat, #4b2e1d;
+      height: 100vh;
+      margin: 0;
+      padding: 1rem;
     }
-
-    body::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(2px);
-      z-index: 0;
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      background: linear-gradient(145deg, #2c2c2c, #1c1c1c);
-      border: 2px solid #cfa93f;
-      border-radius: 20px;
-      padding: 30px 20px;
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
-      width: 90%;
-      max-width: 420px;
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
       text-align: center;
     }
-
-    h2 {
-      font-size: 2.2rem;
-      color: #ffd700;
-      margin-bottom: 8px;
-      text-shadow: 1px 1px 6px #000;
+    #uploadLabel {
+      cursor: pointer;
+      border: 1px dashed #00ff88;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      width: 100%;
+      max-width: 300px;
     }
-
-    .subtitle {
-      font-family: 'Roboto', sans-serif;
-      font-size: 0.95rem;
-      color: #ccc;
-      margin-bottom: 25px;
-    }
-
     input[type="file"] {
       display: none;
     }
-
-    label.upload-label {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid #777;
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-family: 'Roboto', sans-serif;
-      color: #e0e0e0;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    label.upload-label:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
     button {
-      background: linear-gradient(135deg, #6e30ff, #bd10e0);
-      color: white;
-      border: none;
-      padding: 14px 26px;
-      border-radius: 30px;
-      font-size: 16px;
-      font-family: 'Roboto', sans-serif;
+      background: none;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      padding: 0.5rem 1rem;
       cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 0 14px rgba(189, 16, 224, 0.6);
-      transition: transform 0.3s, box-shadow 0.3s;
+      font-family: monospace;
+      margin-bottom: 0.5rem;
     }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 18px rgba(255, 215, 0, 0.8);
-    }
-
-    #fileList {
-      margin-top: 15px;
-      font-size: 0.9rem;
-      font-family: 'Roboto', sans-serif;
-      color: #ffcc00;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
     #status {
-      margin-top: 15px;
-      font-size: 1rem;
-      font-family: 'Roboto', sans-serif;
-      color: #90ee90;
-      text-shadow: 0 0 3px #000;
+      margin-top: 1rem;
+      text-align: center;
+    }
+    #log {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      width: 100%;
+      max-width: 300px;
+      text-align: left;
+      word-break: break-word;
+    }
+    .log-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.2rem 0;
+    }
+    .status-icon {
+      margin-left: 0.5rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>MTGVision</h2>
-    <p class="subtitle">Scan. Sort. Track. Your Magic, Your Value.</p>
-
-    <label class="upload-label" for="imageUpload">Add Card Images</label>
-    <input type="file" id="imageUpload" accept="image/*" multiple>
-
-    <div id="fileList">No files added yet.</div>
-
-    <button onclick="processAll()">Process All</button>
-    <div id="status"></div>
-  </div>
+  <h1>MTGVision Terminal</h1>
+  <label id="uploadLabel" for="fileInput">Add Card Images</label>
+  <input id="fileInput" type="file" accept="image/*" multiple />
+  <button id="processBtn">Process All</button>
+  <button id="resetBtn">Clear</button>
+  <div id="status">0 images added</div>
+  <div id="log"></div>
 
   <script>
-    const fileInput = document.getElementById('imageUpload');
-    const fileList = document.getElementById('fileList');
+    const fileInput = document.getElementById('fileInput');
+    const processBtn = document.getElementById('processBtn');
+    const resetBtn = document.getElementById('resetBtn');
     const status = document.getElementById('status');
-    let filesToUpload = [];
+    const log = document.getElementById('log');
+    let files = [];
 
     fileInput.addEventListener('change', (e) => {
       const newFiles = Array.from(e.target.files);
-      filesToUpload.push(...newFiles);
-      renderFileList();
+      files = files.concat(newFiles);
+      status.textContent = `${files.length} image(s) added`;
+      log.innerHTML = files.map((f, i) => `<div class="log-item" id="log-${i}">${i + 1}. ${f.name}<span class="status-icon" id="status-${i}"></span></div>`).join('');
+      if (navigator.vibrate) navigator.vibrate(50);
     });
 
-    function renderFileList() {
-      fileList.innerHTML = filesToUpload.length
-        ? filesToUpload.map(f => `• ${f.name}`).join('<br>')
-        : "No files added yet.";
-    }
-
-    async function processAll() {
-      if (!filesToUpload.length) {
-        alert("No images to process.");
+    processBtn.addEventListener('click', async () => {
+      if (!files.length) {
+        status.textContent = 'No images to process';
         return;
       }
 
-      status.textContent = "Processing...";
+      status.textContent = 'Uploading...';
+      if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
 
-      for (let file of filesToUpload) {
+      for (const [index, file] of files.entries()) {
         const formData = new FormData();
         formData.append('image', file);
 
         try {
-          const res = await fetch('https://muinf.app.n8n.cloud/webhook/card-upload', {
+          const response = await fetch('https://muinf.app.n8n.cloud/webhook/card-upload', {
             method: 'POST',
-            body: formData
+            body: formData,
           });
 
-          const data = await res.json();
-          status.textContent = `Last Processed: ${data.cardName || 'N/A'} - $${data.price || 'N/A'}`;
+          const statusIcon = document.getElementById(`status-${index}`);
+          statusIcon.textContent = response.ok ? '✔' : '✖';
         } catch (err) {
-          status.textContent = 'Error processing images.';
           console.error(err);
+          const statusIcon = document.getElementById(`status-${index}`);
+          statusIcon.textContent = '✖';
         }
       }
 
-      filesToUpload = [];
-      renderFileList();
-    }
+      status.textContent = 'Upload complete';
+      files = [];
+    });
+
+    resetBtn.addEventListener('click', () => {
+      files = [];
+      fileInput.value = '';
+      status.textContent = '0 images added';
+      log.innerHTML = '';
+      if (navigator.vibrate) navigator.vibrate(100);
+    });
   </script>
 </body>
 </html>
